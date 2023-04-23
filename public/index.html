@@ -43,6 +43,90 @@
           <input type="password" id="openai_key" class="form-control" placeholder="API key goes here" />
       </div>
   </div>
+  <div class="row">
+    <!-- Left Section, Chatbox, tech selection, send button - start -->
+    <div class="col-lg-9">
+
+      <input type="text" id="chat_box" class="form-control" placeholder="Enter text here -- ctrl/command + enter to send the message" />
+
+      <div class="row tech_selection">
+          <div class="col-lg-9 topic">
+              <!-- Change the value="xxx" and the label like Golang -->
+              <span><input type="radio" name="topic" value="" checked="checked" /> Nothing  </span>
+              <span><input type="radio" name="topic" data="other" custom_prefix="Give a quotation related to " value="inspirational_quote" /> Quote  </span>
+              <span><input type="radio" name="topic" data="technology" value="python" /> Python  </span>
+              <span><input type="radio" name="topic" data="technology" value="golang" /> Golang </span>
+              <span><input type="radio" name="topic" data="technology" value="regular expressions" /> RegEx </span>
+              <span><input type="radio" name="topic" data="technology" value="javascript" /> JavaScript </span>
+              <span><input type="radio" name="topic" data="technology" value="postgres" /> Postgres </span>
+              <!-- Change the value="xxx" and the label like Golang -->
+              <br/>
+              <small class="text pull_left"> 💡 You can just change this 👆🏻 in the HTML to suit your stack</small>
+          </div>
+
+          <div class="col-lg-3">
+              <button class="btn btn-primary" id="send_button">Send</button>
+          </div>
+
+          <div id="tabs">
+                  <ul>
+                      <li><a href="#tabs-1">Chatbox</a></li>
+                      <li><a href="#tabs-2">Media Content</a></li>
+                  </ul>
+
+              <div id="tabs-1">
+                  <!-- Chat box - start -->
+                  <div class="row">
+                      <div class="col-lg-12" id="chat_response"></div>
+                  </div>
+                  <!-- Chat box - end -->
+              </div>
+
+              <div id="tabs-2">
+                  <!-- Media Tab - start -->
+                  <div class="row">
+                      <div class="col-lg-12" id="media_tab"></div>
+                  </div>
+                  <!-- Media Tab - end -->
+              </div>
+          </div>
+      </div>
+  </div>
+  <div class="col-lg-3 right_section">
+
+    <!-- API Related Settings - start-->
+    <div class="api_settings right_panel">
+        <h6>API Settings: <span class="min_max">Show / Hide</span></h6>
+
+        <div class="wrapper">
+            <div class="right_single_setting">
+                Model Name: <br/>
+                <select id="model_name">
+                    <option value="gpt-3.5-turbo">GPT 3.5 Turbo</option>
+                    <option value="gpt-3.5-turbo-0301">GPT 3.5 Turbo-0301</option>
+                    <option value="gpt-4">GPT 4</option>
+                </select>
+                    <br/>
+            </div>
+
+            <div class="right_single_setting">
+                Temprature: <span id="gpt_temprature_value">0.5</span> <small class="text pull_right">higher = more creative</small> <br/>
+                <input type="range" class="form-range" min="0" max="1" step="0.05" id="gpt_temprature">
+            </div>
+
+            <div class="right_single_setting">
+                Number of responses: <span id="n_gens">1</span> <small class="text pull_right">How many replies</small> <br/>
+                <input type="range" class="form-range" min="1" max="5" step="1" id="num_gens" value="1" />
+            </div>
+
+            <div class="right_single_setting">
+                <input type="checkbox" id="enable_max_tokens" /> Max Tokens: <span id="max_tokens">1</span> <small class="text pull_right">Max response tokens</small> <br/>
+                <input type="range" class="form-range" min="1" max="4096" step="10" id="num_tokens" value="4096" />
+            </div>
+        </div>
+    </div>
+    <!-- API Related Settings - end-->
+  </div>
 <script type="text/javascript" src="script.js"></script>
 </body>
 </html>
