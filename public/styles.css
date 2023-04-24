@@ -54,7 +54,7 @@
     	border-radius: 15px;
     	border: thin solid #eeeeee;
     	padding: 5px;
-    	max-width: 250px;
+    	max-width: 400px;
     }
 
     div.tech_selection {
@@ -82,7 +82,6 @@
     	padding: 5px;
     	border: thin solid #eeeeee;
     	border-radius: 15px;
-    	margin-bottom: 10px;
     }
 
     span.token_count_labels {
@@ -91,7 +90,7 @@
     }
 
     #openai_key {
-    	width: 200px;
+    	width: 300px;
     	float: right;
     }
 

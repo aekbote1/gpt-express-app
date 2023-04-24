@@ -19,3 +19,362 @@ $("#copy").click(function() {
 )
 
 
+/*
+-----------------------------------------------
+Parse the commands sent by GPT to us
+------------------------------------------------
+*/
+
+
+
+/*
+--------------------------------------------------------------
+Business logic of the page:
+--------------------------------------------------------------
+*/
+
+// Helper functions:
+
+    // Function to escape HTML characters:
+    const escapeHtml = (unsafe) => {
+        return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    }
+
+    // Common function to show the time next to the chat message:
+    function getCurrentTime() {
+        let now = new Date();
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        let seconds = now.getSeconds().toString().padStart(2, '0');
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
+    // This function converts a single response from ChatGPT to HTML format:
+    formatResponse = (retMsg) => {
+
+        single_lines = retMsg.split("\n")
+
+        // Give additional capability to the bot -- very simple example of changing the page background and changeing the text color
+        // Loop over all the lines:
+        for (var i = 0; i < single_lines.length; i++) {
+
+            // If the line starts with __changeBackground, then change the background color:
+            if (single_lines[i].startsWith("___")) {
+
+                // We probably have some command that ChatGPT is trying to invoke, send
+                // it to the handler function:
+                HandleGPTCommandRequest(single_lines[i])
+            }
+        }
+
+        retMsg = escapeHtml(retMsg)
+
+        // Any code within ```<something>``` should be replaced with <pre> <something> </pre>
+        // TODO: This thing is not working properly, need to fix it:
+        retMsg = retMsg.replaceAll(/```([\s\S]+)```/g, "<br/><pre class='code'>\$1</pre><br/>");
+
+        // TODO: The \n is not working properly, need to fix it:
+        retMsg = retMsg.replaceAll("\n", "<br/>");
+
+        curTime = getCurrentTime();
+        retMsg = `<br/><br/><span class='chatgpt'>ChatGPT:</span><small>${curTime}</small> <br/>` + retMsg + "<br/>";
+
+        return retMsg
+    }
+
+    // Variables to track tokens:
+    session_total_prompt_tokens = 0
+    session_total_completion_tokens = 0
+    session_total_tokens = 0
+    session_time_taken_secs = 0
+    session_calls_done = 0
+    session_avg_time_taken = 0
+
+
+    // ChatGPT API Call:
+    function CallChatGPT() {
+
+        // The chat message and the API key
+        user_request = $("#chat_box").val()
+        api_key = $("#openai_key").val()
+
+        if (api_key.length == 0) {
+
+            // Show error:
+            $("#status_message").css("color", "red").html("Please add an API key 👉🏼")
+
+            // Change the style back after 3 seconds:
+            setTimeout(function(){ $("#status_message").css("color", "black"); $("#status_message").html(".") }, 4000)
+            return;
+        }
+
+        // Make the chat box tab active, incase the user was in the media tab:
+        $("#tabs").tabons("opti", "active", 0);
+
+        // Get the topic
+        topic = $("input[name='topic']:checked").val()
+
+        // If something is selected, add that in front of the message:
+
+        if (topic.length > 0) {
+
+            // 👇🏼👇🏼👇🏼 Change this code if you want
+            // The message will have a prefix, example if you write : how to write a for loop?
+            // and you have selected Python from the radio button
+            // then the message sent to chat GPT will be :
+            // "I am working on, python. How do you write a for loop?"
+
+            // What
+            topic_type = $("input[name='topic']:checked").attr("data")
+
+            // Is there a custom prefix statement?
+            custom_prefix = $("input[name='topic']:checked").attr("custom_prefix") ? $("input[name='topic']:checked").attr("custom_prefix") : "";
+
+            // If there is a custom prefix, then use that:
+            if ( custom_prefix.length > 0 ) {
+                user_request = custom_prefix + user_request;
+
+                // If this is just a technology topic, use this common pattern:
+            } else if (topic_type == "technology") {
+
+                user_request = "I am working on, " + topic + ". Please help me with " + user_request;
+            }
+        }
+
+        // OpenAI URL:
+        openai_url = "https://api.openai.com/v1/chat/completions"
+
+        // Build details of the user functions, so they can be used on the
+        // initialization of the bot:
+
+        custom_func_list_str = ""
+
+        // Loop over the custom_functions and build the text to send to ChatGPT:
+        for (var kk in custom_functions) {
+
+            cur_func = custom_functions[kk]
+
+            // text
+            custom_func_list_str += `function name & parameters: ${cur_func["func_name_param_pattern"]} | `
+            custom_func_list_str += `what it does: ${cur_func["func_explanation"]} | `
+            custom_func_list_str += `user usage example: ${cur_func["user_request_pattern"]} \n`
+        }
+
+        // The actual message to send -- you can change this part if you want
+        // as per your liking:
+        msgs = [
+            {
+                "role": "system",
+                // You can change this part to be whatever you want it to be 👇🏻
+                "content": `You are a helpful coding assistant and may be sometimes asked other questions and given tasks.
+
+                For the tasks you have a list of functions you can call (given below)
+                - To call a function, reply with ___<function name>(<parameters>) in a separate line
+                - In the list, you have details of:
+                    - The function name and the parameters it accepts
+                    - What the function does and an example of how the user may request the function (it's a broad outline - it may vary slightly by the the user)
+                - Please try to fulfil the request immediately rather than ask for more information
+
+                Custom function details:\n` + custom_func_list_str
+            },
+            {
+                "role": "user",
+                "content": user_request
+            }
+        ]
+
+        // Get the temprature value from the slider -- if not defined, set it to 0.6
+        temprature = $("#gpt_temprature").val()
+        // convert it to a float:
+        temprature = parseFloat(temprature)
+
+        if (temprature.length === 0 || temprature === 0) {
+            temprature = 0.6
+        }
+
+        // If the model name is set, use that:
+        model_name = $("#model_name").val()
+
+        // Something should be set and it should be one of the valid model names, otehrwise use the default:
+        if (model_name.length === 0 || ( model_name !== "gpt-3.5-turbo" && model_name !== "gpt-3.5-turbo-0301" && model_name !== "gpt-4" ) ) {
+            model_name = "gpt-3.5-turbo"
+        }
+
+        // Number of responses to generate:
+        num_responses = parseInt($("#num_gens").val())
+
+        if (num_responses.length === 0 || num_responses === 0) {
+            num_responses = 1
+        }
+
+        // These are other settings to send to OpenAI:
+        send_message = {
+            model : model_name,
+            messages: msgs,
+            temperature: temprature,
+            n: num_responses,
+        };
+
+        // If #enable_max_tokens is checked, then use the value for max_tokens:
+        if ($("#enable_max_tokens").is(":checked")) {
+
+            // Get the value:
+            max_tokens = $("#max_tokens").val()
+
+            // If the value is not set, then set it to 100:
+            if (max_tokens.length === 0 || max_tokens === 0) {
+                max_tokens = 2000
+            }
+
+            // Add the max_tokens to the send_message:
+            send_message["max_tokens"] = max_tokens
+        }
+
+        // Success function()
+        // This is the code that will be run after the reply from ChatGPT comes back:
+        success_behavior = function(reply_message) {
+
+            console.log("Got a response back from ChatGPT -- the response is:")
+            console.log(reply_message)
+
+            retMsg = ""
+
+            // Actual message from ChatGPT:
+            for (i=0; i < reply_message.choices.length; i++) {
+
+                curMsg = reply_message.choices[i].message.content;
+                // $("#status_message").html("<span class='sending'>got reply</span>");
+                curMsg = formatResponse(curMsg)
+
+                retMsg += curMsg
+
+                $("#status_message").append("<span class='sending'>got reply</span>");
+            }
+
+            // After 1.5 seconds hide the success message:
+            window.setTimeout(function(){ $("#status_message").html(".");}, 1500);
+
+            $("#chat_response").append(retMsg);
+            $("#chat_response").scrollTop($("#chat_response")[0].scrollHeight);
+
+            $("#prompt_tokens").html(reply_message.usage.completion_tokens);
+            $("#completion_tokens").html(reply_message.usage.prompt_tokens);
+            $("#total_tokens").html(reply_message.usage.total_tokens);
+
+            session_total_completion_tokens += reply_message.usage.completion_tokens;
+            session_total_prompt_tokens += reply_message.usage.prompt_tokens;
+            session_total_tokens += reply_message.usage.total_tokens;
+
+            $("#total_prompt_tokens").html(session_total_completion_tokens);
+            $("#total_completion_tokens").html(session_total_prompt_tokens);
+            $("#total_session_tokens").html(session_total_tokens);
+        };
+
+        curTime = getCurrentTime();
+        show_msg = `<br/><br/><span class='you'>You: </span> <small>${curTime}</small><br/>` + user_request
+
+        $("#chat_response").append(show_msg);
+        $("#chat_response").scrollTop($("#chat_response")[0].scrollHeight);
+
+
+        var ajaxTime= new Date().getTime();
+
+        // This is the actual call to OpenAI
+        $.ajax({
+            type: "POST",
+            url: openai_url,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + api_key);
+            },
+            data: JSON.stringify(send_message),
+            success: success_behavior,
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json"
+        }).done(function(data) {
+
+            secs = ((new Date().getTime() - ajaxTime)/1000).toFixed(2);
+
+            session_time_taken_secs += parseFloat(secs);
+            session_calls_done += 1;
+
+            session_avg_time_taken = (session_time_taken_secs / session_calls_done).toFixed(2);
+
+            $("#last_time_taken").html(secs + " sec");
+            $("#avg_time_taken").html(session_avg_time_taken + " sec");
+
+
+        }).fail(function(data) {
+
+            $("#status_message").css("color", "red").html("Error with previous request. Please check the logs or try again.");
+            console.log(data);
+
+            setTimeout(function() {
+                $("#status_message").css("color", "black").html(".");
+            }, 3000);
+        })
+    };
+
+    send_request = function() {
+
+        $("#status_message").html("<span class='sending'>Sending message...</span>")
+
+        // The call to ChatGPT is made from this function:
+        CallChatGPT()
+    };
+
+    // Side panel description of the available custom actions:
+    function buildCustomActionsList() {
+
+        // Build the custom actions list:
+        txt = ""
+
+        $.each(custom_functions, function(key, value) {
+
+            txt += `
+<hr/>
+                <b class="action_name">${value["action_name"]}</b>
+                <p>${value["user_description"]}</p>
+                <p>Example Usage:<br/> ${value["user_request_pattern"]}</p>
+`
+        });
+
+        // chat_actions_available_list
+        $(".chat_actions_available_list").html(txt)
+    }
+
+    // Wait for the page to load before we do anything
+    $("document").ready(function() {
+		// Initialize the tabs:
+        $("#tabs").tabs();
+        
+        $("#max_tokens").html($("#num_tokens").val())
+        $("#tabs").tabs("option", "active", 0);
+        // Make the list of action descriptions to show on the side panel:
+        //buildCustomActionsList();
+
+        $(".min_max").click(function(){
+
+            console.log("Clicked on min/max button")
+            console.log("found elements: ", $(this).siblings(".wrapper"))
+            // Toggle visibility of the sibling called ".wrapper":
+            $(this).parent("h6").siblings(".wrapper").toggle();
+        });
+
+       
+        // If ctrl + enter is pressed anywhere on the page:
+        $(document).keypress(function(e) {
+            if ((e.keyCode == 10 || e.keyCode == 13) && (e.ctrlKey || e.metaKey)) {
+                send_request();
+            }
+        });
+
+        $("#send_button").click(function() {
+            send_request();
+        })
+
+        // Hide the API settings and usage reference:
+        $(".api_settings").find(".min_max").click();
+        $(".usage_reference").find(".min_max").click();
+
+    });
+
