@@ -1,6 +1,7 @@
 {
   "name": "express-heroku-demo",
   "version": "1.0.0",
+  "type": "module",
   "description": "Edit me later",
   "main": "index.js",
   "scripts": {
@@ -11,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.0.3",
+    "openai": "^3.2.1",
     "express": "^4.17.1"
   }
 }

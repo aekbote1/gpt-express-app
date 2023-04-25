@@ -100,8 +100,7 @@
     }
 
     #send_button {
-    	float: right;
-
+		float: left;
     }
 
     small {
@@ -109,13 +108,13 @@
     	font-size: 10px;
     }
 
-    span.chatgpt {
-    	color: blueviolet;
+    span.titleTwo {
+    	color: rgb(226, 55, 43);
     	font-weight: bold;
     }
 
-    span.you {
-    	color: brown;
+    span.titleOne {
+    	color: rgb(0, 0, 0);
     	font-weight: bold;
     }
 
@@ -129,18 +128,17 @@
 
     pre {
     	white-space: pre-wrap;
-    	/* Since CSS 2.1 */
     	white-space: -moz-pre-wrap;
-    	/* Mozilla, since 1999 */
     	white-space: -pre-wrap;
-    	/* Opera 4-6 */
     	white-space: -o-pre-wrap;
-    	/* Opera 7 */
     	word-wrap: break-word;
-    	/* Internet Explorer 5.5+ */
     }
 
     div#chat_response {
     	max-height: 750px;
     	overflow-y: scroll;
     }
+
+	.hidden {
+		display: none;
+	}
