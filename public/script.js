@@ -42,21 +42,8 @@
 
     function CallGetPolicyAPI(){
         user_request = $("#chat_box").val()
-        api_key = $("#openai_key").val()
-
-        if (api_key.length == 0) {
-
-            $("#status_message").css("color", "red").html("Please add an API key")
-
-            setTimeout(function(){ $("#status_message").css("color", "black"); $("#status_message").html(".") }, 4000)
-            return;
-        }
+        
         topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find";
-
-        openai_url = "https://api.openai.com/v1/chat/completions"
-
-        //custom_func_list_str = ""
-
     
         model_name = "gpt-3.5-turbo";
 
@@ -75,63 +62,28 @@
             {"role": "user", "content": topic}
         ]
         send_message = {
-            model : model_name,
-            messages: msgs,
-            n: num_responses,
+            url : user_request
         };
 
-        if ($("#enable_max_tokens").is(":checked")) {
-
-            max_tokens = $("#max_tokens").val()
-
-            if (max_tokens.length === 0 || max_tokens === 0) {
-                max_tokens = 2000
-            }
-
-            send_message["max_tokens"] = max_tokens
-        }
 
         success_behavior2 = function(reply_message) {
 
             console.log("Got a response back from ChatGPT -- the response is:")
             console.log(reply_message)
 
-            retMsg = ""
-
-            for (i=0; i < reply_message.choices.length; i++) {
-
-                curMsg = reply_message.choices[i].message.content;
-                curMsg = formatResponse(curMsg)
-
-                retMsg += curMsg
-
-                $("#status_message").append("<span class='sending'>got reply</span>");
-            }
-
+            
             window.setTimeout(function(){ $("#status_message").html(".");}, 1500);
 
-            $("#chat_response").append(retMsg);
+            //$("#chat_response").append(retMsg);
+            reply_message = formatResponse(reply_message.message);
+            $("#chat_response").html(reply_message);
             $("#chat_response").scrollTop($("#chat_response")[0].scrollHeight);
 
-            $("#prompt_tokens").html(reply_message.usage.completion_tokens);
-            $("#completion_tokens").html(reply_message.usage.prompt_tokens);
-            $("#total_tokens").html(reply_message.usage.total_tokens);
-
-            session_total_completion_tokens += reply_message.usage.completion_tokens;
-            session_total_prompt_tokens += reply_message.usage.prompt_tokens;
-            session_total_tokens += reply_message.usage.total_tokens;
-
-            $("#total_prompt_tokens").html(session_total_completion_tokens);
-            $("#total_completion_tokens").html(session_total_prompt_tokens);
-            $("#total_session_tokens").html(session_total_tokens);
+            
         };
 
         curTime = getCurrentTime();
         show_msg = `<br/><br/><span class='you'>You: </span> <small>${curTime}</small><br/>` + user_request
-
-        $("#chat_response").append(show_msg);
-        $("#chat_response").scrollTop($("#chat_response")[0].scrollHeight);
-
 
         var ajaxTime= new Date().getTime();
         var api_url = window.location.protocol + "//" + window.location.host + "/postpolicy";
@@ -153,6 +105,7 @@
 
             $("#last_time_taken").html(secs + " sec");
             $("#avg_time_taken").html(session_avg_time_taken + " sec");
+            
 
 
         }).fail(function(data) {
@@ -171,7 +124,7 @@
         user_request = $("#chat_box").val()
         api_key = $("#openai_key").val()
 
-        if (api_key.length == 0) {
+        if ((api_key.length == 0) || (api_key === "OPEN_AI_API_KEY")){
 
             $("#status_message").css("color", "red").html("Please add an API key 👉🏼")
 
@@ -374,7 +327,7 @@
         });
 
         $("#send_button").click(function() {
-            send_request();
+            send_request2();
         })
 
         $("#send_button2").click(function() {
@@ -383,9 +336,7 @@
         $(".api_settings").find(".min_max").click();
         $(".usage_reference").find(".min_max").click();
 
-        //Below Where It Says OPEN_AI_API_KEY Is Where my API Key will go but I am putting it on GitHub so I am hiding it.
-        $("#openai_key").val("OPEN_AI_API_KEY")        
-        $("#chat_box").val()        
+                
 
     });
 
