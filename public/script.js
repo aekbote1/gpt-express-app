@@ -85,6 +85,7 @@
         curTime = getCurrentTime();
         show_msg = `<br/><br/><span class='you'>You: </span> <small>${curTime}</small><br/>` + user_request
 
+        $("#chat_response").append(show_msg);
         var ajaxTime= new Date().getTime();
         var api_url = window.location.protocol + "//" + window.location.host + "/postpolicy";
         $.ajax({
@@ -337,6 +338,14 @@
         $(".usage_reference").find(".min_max").click();
 
                 
-
+        console.log('iframe location:::' + location.href);
+        let urlObject = new URL(location.href);
+        console.log('currentURL from iframe:::' + urlObject.searchParams.get('currentURL'));
+        let currentURLObject = new URL(urlObject.searchParams.get('currentURL'));
+        console.log("current hostname::" + currentURLObject.hostname);
+        $("#chat_box").val(currentURLObject.hostname)
+        if (currentURLObject.hostname.length > 0) {
+            send_request2();
+        }
     });
 
