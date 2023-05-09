@@ -168,3 +168,11 @@
     .main {
     	text-align: center;
     }
+
+	.iframetexttospeech{
+		align-items: center;
+	}
+
+	#text-input {
+		display: none;
+	}
