@@ -154,7 +154,7 @@ function CallChatGPT() {
     }
 
 
-    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in three short bullet points";
+    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in four short bullet points";
 
 
     if (topic.length > 0) {
