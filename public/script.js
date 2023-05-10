@@ -153,7 +153,7 @@ function CallChatGPT() {
     }
 
 
-    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in three short bullet points";
+    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in three short bullet points that can be read by a speech bot in under 59 seconds";
 
 
     if (topic.length > 0) {
