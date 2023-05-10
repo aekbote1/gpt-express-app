@@ -336,7 +336,12 @@ var textOutputResponse;
 
 
 function speechOutput() {
-    speechRender(textOutputResponse);
+    var single_lines = textOutputResponse.split(". ")
+    for (var i = 0; i < single_lines.length; i++) {
+        speechRender(single_lines [i]);
+
+    }
+
 }
 
 
