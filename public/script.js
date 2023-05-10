@@ -8,10 +8,11 @@ const checkBrowserCompatibility = () => {
 checkBrowserCompatibility()
 
 // TODO: define called function
-function speechRender(texttovoice) {
-    let utterance = new SpeechSynthesisUtterance(texttovoice);
-    speechSynthesis.speak(utterance);
-
+function speechRender(single_lines) {
+    for (var i = 0; i < single_lines.length; i++) {
+        let utterance = new SpeechSynthesisUtterance(single_lines[i]);
+        speechSynthesis.speak(utterance);
+    }    
 }
 
 
@@ -153,7 +154,7 @@ function CallChatGPT() {
     }
 
 
-    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in three short bullet points that can be read by a speech bot in under 59 seconds";
+    topic = "summarize " + $("#chat_box").val() + "’s privacy policy and if not summarize whatever you can find in three short bullet points";
 
 
     if (topic.length > 0) {
@@ -337,10 +338,9 @@ var textOutputResponse;
 
 function speechOutput() {
     var single_lines = textOutputResponse.split(". ")
-    for (var i = 0; i < single_lines.length; i++) {
-        speechRender(single_lines [i]);
+    speechRender(single_lines);
 
-    }
+    
 
 }
 
